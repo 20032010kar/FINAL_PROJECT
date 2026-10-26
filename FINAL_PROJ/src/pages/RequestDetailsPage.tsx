@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
+import { useNotification } from '../context/NotificationContext';
 
 export function RequestDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [commentText, setCommentText] = useState('');
+    const { showNotification } = useNotification();
 
     const userRole = localStorage.getItem('userRole');
     const isOperator = userRole === 'operator';
 
-    // Завантаження даних конкретної заявки
     const { data: request, isLoading, error } = useQuery({
         queryKey: ['request', id],
         queryFn: async () => {
@@ -21,7 +22,6 @@ export function RequestDetailsPage() {
         },
     });
 
-    // Завантаження списку статусів для оператора
     const { data: statuses = [] } = useQuery({
         queryKey: ['statuses'],
         queryFn: async () => {
@@ -30,27 +30,48 @@ export function RequestDetailsPage() {
         },
     });
 
-    // Мутація для зміни статусу заявки (оператор)
+    const { data: history = [] } = useQuery({
+        queryKey: ['history', id],
+        queryFn: async () => {
+            const res = await api.get(`/requests/${id}/history`);
+            return res.data;
+        },
+    });
+
     const statusMutation = useMutation({
         mutationFn: async (newStatusId: string) => {
-            const res = await api.patch(`/requests/${id}/status`, { statusId: newStatusId });
+            const res = await api.patch(`/requests/${id}/status`, { 
+                statusId: newStatusId,
+                operatorName: isOperator ? 'Rory (Оператор)' : 'Elis'
+            });
             return res.data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['request', id] });
+            queryClient.invalidateQueries({ queryKey: ['history', id] });
             queryClient.invalidateQueries({ queryKey: ['requests'] });
+            showNotification('Статус заявки змінено', 'success');
+        },
+        onError: () => {
+            showNotification('Помилка при зміні статусу заявки.', 'error');
         },
     });
 
-    // Мутація для додавання коментаря
     const commentMutation = useMutation({
         mutationFn: async (text: string) => {
-            const res = await api.post(`/requests/${id}/comments`, { text });
+            const res = await api.post(`/requests/${id}/comments`, { 
+                comment: text,
+                authorName: isOperator ? 'Rory' : 'Elis'
+            });
             return res.data;
         },
         onSuccess: () => {
             setCommentText('');
             queryClient.invalidateQueries({ queryKey: ['request', id] });
+            showNotification('Коментар успішно доданo', 'success');
+        },
+        onError: () => {
+            showNotification('Не вдалося додати коментар.', 'error');
         },
     });
 
@@ -67,7 +88,7 @@ export function RequestDetailsPage() {
     if (isLoading) {
         return (
             <div className="text-center py-12 text-emerald-400 font-mono text-lg animate-pulse">
-                🧪 Вариться зілля та завантажується закляття...
+                <span>Завантаження даних...</span>
             </div>
         );
     }
@@ -75,35 +96,32 @@ export function RequestDetailsPage() {
     if (error || !request) {
         return (
             <div className="text-center py-12 text-red-400 font-mono text-lg bg-zinc-950 border border-red-500/30 rounded-xl max-w-lg mx-auto p-6">
-                💀 Заявку не знайдено або її знищили темні сили.
+                Заявку не знайден
             </div>
         );
     }
 
     return (
         <div className="relative max-w-4xl mx-auto space-y-6">
-            {/* Отруйно-зелене неонове сяйво на фоні */}
             <div className="absolute -top-10 -left-10 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute -bottom-10 -right-10 w-80 h-80 bg-green-950/40 rounded-full blur-3xl pointer-events-none"></div>
 
-            {/* Шапка з навігацією */}
             <div className="relative z-10 flex justify-between items-center">
                 <button
                     onClick={() => navigate('/requests')}
                     className="text-emerald-400 hover:text-emerald-300 text-sm font-semibold flex items-center space-x-1 transition cursor-pointer"
                 >
-                    <span>&larr; Назад до гримуару заявок 🧟</span>
+                    <span>&larr; Назад до заявок</span>
                 </button>
                 <span className="text-xs font-mono text-zinc-500 bg-zinc-900 px-3 py-1 rounded-full border border-emerald-900/40">
-                    ID закляття: <b className="text-emerald-400">{request.id}</b>
+                    Номер заявки: <b className="text-emerald-400">#{request.id}</b>
                 </span>
             </div>
 
-            {/* Основна інформація про заявку */}
             <div className="relative z-10 bg-zinc-950 border border-emerald-500/30 p-6 rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.12)] space-y-5 text-emerald-100">
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div className="flex items-center space-x-3">
-                        <span className="text-3xl">🧪</span>
+                        <span className="text-3xl"></span>
                         <h1 className="text-2xl font-bold tracking-wide text-emerald-400 font-mono uppercase">
                             {request.subject || request.topic}
                         </h1>
@@ -129,7 +147,7 @@ export function RequestDetailsPage() {
                             </div>
                         ) : (
                             <span className="px-3 py-1.5 text-xs font-mono font-semibold rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                                🟢 Статус: {request.statusId}
+                                Статус: {request.statusId}
                             </span>
                         )}
                     </div>
@@ -147,12 +165,40 @@ export function RequestDetailsPage() {
                 </div>
             </div>
 
-            {/* Блок заклять-коментарів */}
+            <div className="relative z-10 bg-zinc-950 border border-emerald-500/30 p-6 rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.12)] space-y-4">
+                <div className="flex items-center space-x-2 border-b border-emerald-950 pb-3">
+                    <span className="text-xl">⏳</span>
+                    <h2 className="text-lg font-bold text-emerald-400 font-mono uppercase tracking-wider">
+                        Історія зміни статусів
+                    </h2>
+                </div>
+
+                <div className="space-y-3">
+                    {history && history.length > 0 ? (
+                        history.map((h: any, index: number) => (
+                            <div key={index} className="p-3 bg-zinc-900/60 border border-emerald-900/40 rounded-lg text-xs font-mono flex justify-between items-center">
+                                <div>
+                                    <span className="text-zinc-400">Зміна:</span>{' '}
+                                    <span className="text-red-400 line-through">{h.oldStatus}</span> &rarr;{' '}
+                                    <span className="text-emerald-300 font-bold">{h.newStatus}</span>
+                                    <div className="text-zinc-500 mt-0.5">Оператор: {h.changedBy}</div>
+                                </div>
+                                <div className="text-zinc-500">
+                                    {new Date(h.changedAt).toLocaleString()}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-xs text-zinc-500 italic font-mono">Історія змін порожня...</p>
+                    )}
+                </div>
+            </div>
+
             <div className="relative z-10 bg-zinc-950 border border-emerald-500/30 p-6 rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.12)] space-y-6">
                 <div className="flex items-center space-x-2 border-b border-emerald-950 pb-3">
-                    <span className="text-xl">📜</span>
+                    <span className="text-xl"></span>
                     <h2 className="text-lg font-bold text-emerald-400 font-mono uppercase tracking-wider">
-                        Шепоти та Коментарі
+                        Коментарі
                     </h2>
                 </div>
 
@@ -162,25 +208,24 @@ export function RequestDetailsPage() {
                             <div key={index} className="p-4 bg-zinc-900/80 border border-emerald-900/40 rounded-lg space-y-1.5">
                                 <div className="flex justify-between text-xs font-mono text-zinc-400">
                                     <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                                        🧙‍♂️ {comment.authorEmail || comment.authorName || 'Невідомий маг'}
+                                        {comment.authorName || comment.authorEmail || 'Невідомий користувач'}
                                     </span>
                                     <span>{new Date(comment.createdAt).toLocaleString()}</span>
                                 </div>
-                                <p className="text-sm text-zinc-200">{comment.text || comment.comment}</p>
+                                <p className="text-sm text-zinc-200">{comment.comment || comment.text}</p>
                             </div>
                         ))
                     ) : (
-                        <p className="text-xs text-zinc-500 italic font-mono">В астралі ще немає жодного коментаря...</p>
+                        <p className="text-xs text-zinc-500 italic font-mono"> ще немає жодного коментаря...</p>
                     )}
                 </div>
 
-                {/* Форма додавання коментаря */}
                 <form onSubmit={handleCommentSubmit} className="space-y-3 pt-4 border-t border-emerald-950">
                     <textarea
                         rows={3}
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Напишіть коментар у чаклунський журнал..."
+                        placeholder="Напишіть коментар"
                         className="w-full px-3 py-2 bg-zinc-900 border border-emerald-900/60 rounded-md text-emerald-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition text-sm resize-none"
                         required
                     />
@@ -190,7 +235,7 @@ export function RequestDetailsPage() {
                             disabled={commentMutation.isPending}
                             className="px-5 py-2 border border-emerald-500/50 rounded-md shadow-[0_0_15px_rgba(16,185,129,0.3)] text-xs font-bold text-zinc-950 bg-emerald-500 hover:bg-emerald-400 focus:outline-none disabled:opacity-50 transition uppercase tracking-wider cursor-pointer"
                         >
-                            {commentMutation.isPending ? 'Запечатування...' : 'Додати коментар 🧪'}
+                            {commentMutation.isPending ? 'Надсилання...' : 'Додати коментар '}
                         </button>
                     </div>
                 </form>

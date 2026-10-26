@@ -17,44 +17,44 @@ export const initialRequests: ServiceRequest[] = [
     {
         id: 'req-1',
         userId: '1',
-        topic: 'Не працює принтер',
-        description: 'Принтер не друкує документи.',
-        categoryId: 'yutr-2', // hardware
-        priorityId: 'prio-2', // Average
-        statusId: 'st-1',   // New request
+        topic: 'Доступ до корпоративного VPN',
+        description: 'Не вдається підключитися до робочої мережі з дому через новий протокол безпеки.',
+        categoryId: 'yutr-2',
+        priorityId: 'prio-2',
+        statusId: 'st-1',  
         createdAt: new Date().toISOString(),
         clientContact: 'user@example.com',
     },
     {
         id: 'req-2',
         userId: '1',
-        topic: 'Проблеми з інтернетом',
-        description: 'Зникає підключення до мережі.',
-        categoryId: 'wesf-1', // auxiliary services
-        priorityId: 'prio-3', // High
-        statusId: 'st-2',   // Pending
+        topic: 'Зависає ноутбук',
+        description: 'Пристрій сильно гальмує та перегрівається під час запуску середовища розробки.',
+        categoryId: 'wesf-1',
+        priorityId: 'prio-3', 
+        statusId: 'st-2',   
         createdAt: new Date().toISOString(),
         clientContact: '+380671234567',
     },
     {
         id: 'req-3',
         userId: '1',
-        topic: 'Налаштування телефону',
-        description: 'Потрібно підключити корпоративну пошту.',
-        categoryId: 'sdkv-3', // phones
-        priorityId: 'prio-1', // low
-        statusId: 'st-1',   // New request
+        topic: 'Помилка доступу до пошти',
+        description: 'Не виходить увійти в корпоративний Outlook, система видає помилку автентифікації.',
+        categoryId: 'sdkv-3', 
+        priorityId: 'prio-1',
+        statusId: 'st-1',   
         createdAt: new Date().toISOString(),
         clientContact: 'user@example.com',
     },
     {
         id: 'req-4',
         userId: '1',
-        topic: 'Заміна мишки',
-        description: 'Не працює ліва кнопка миші.',
-        categoryId: 'yutr-2', // hardware
-        priorityId: 'prio-1', // low
-        statusId: 'st-4',   // Resolved
+        topic: 'Налаштування робочого місця',
+        description: 'Потрібно підключити другий монітор, док-станцію та периферію до нового системного блоку.',
+        categoryId: 'yutr-2', 
+        priorityId: 'prio-1', 
+        statusId: 'st-4',   
         createdAt: new Date().toISOString(),
         clientContact: '+380509876543',
     },
@@ -63,9 +63,9 @@ export const initialRequests: ServiceRequest[] = [
         userId: '1',
         topic: 'Помилка ПЗ',
         description: 'Вилітає програма при запуску.',
-        categoryId: 'wesf-1', // auxiliary services
-        priorityId: 'prio-3', // High
-        statusId: 'st-5',   // Rejected
+        categoryId: 'wesf-1',
+        priorityId: 'prio-3', 
+        statusId: 'st-5',   
         createdAt: new Date().toISOString(),
         clientContact: 'user@example.com',
     },

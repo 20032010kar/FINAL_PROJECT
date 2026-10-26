@@ -6,6 +6,7 @@ import { CreateRequestPage } from './pages/CreateReguestPage';
 import { RequestDetailsPage } from './pages/RequestDetailsPage';
 import { MainLayout } from './layouts/MainLayout';
 import { PublicLayout } from './layouts/PublicLayout';
+import { NotificationProvider } from './context/NotificationContext';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -86,7 +87,9 @@ const router = createBrowserRouter([
 export default function App() {
     return (
         <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
+            <NotificationProvider>
+                <RouterProvider router={router} />
+            </NotificationProvider>
         </QueryClientProvider>
     );
 }

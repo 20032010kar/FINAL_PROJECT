@@ -23,7 +23,7 @@ const checkAuth = (request: Request) => {
 };
 
 export const handlers=[
-// 1. Вхід у систему
+
     http.post('/auth/login', async ({ request }) => {
         const data = (await request.json()) as { email: string; password: string };
 
@@ -45,7 +45,6 @@ export const handlers=[
         }
     }),
 
-    // 2. Отримання даних поточного користувача
     http.get('/auth/me', ({ request }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
 
@@ -56,14 +55,12 @@ export const handlers=[
         return HttpResponse.json(users[0]);
     }),
 
-    // 3. Список заявок поточного користувача (з затримкою 800мс за ТЗ)
     http.get('/requests/my', async ({ request }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         await delay(800);
         return HttpResponse.json(requests.filter((r) => r.userId === '1'));
     }),
 
-    // 4. Загальний список заявок для оператора
     http.get('/requests', ({ request }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         const url = new URL(request.url);
@@ -76,7 +73,6 @@ export const handlers=[
         return HttpResponse.json(filtered);
     }),
 
-    // 5. Картка заявки за ID
     http.get('/requests/:id', ({ request, params }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         const item = requests.find((r) => r.id === params.id);
@@ -84,7 +80,6 @@ export const handlers=[
         return HttpResponse.json(item);
     }),
 
-    // 6. Створення нової заявки
     http.post('/requests', async ({ request }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         const body = (await request.json()) as Omit<ServiceRequest, 'id' | 'createdAt' | 'statusId' | 'userId'>;
@@ -93,7 +88,7 @@ export const handlers=[
             ...body,
             id: `req-${Date.now()}`,
             userId: '1',
-            statusId: 'st-1', // Початковий статус "New request"
+            statusId: 'st-1', 
             createdAt: new Date().toISOString(),
         };
 
@@ -101,7 +96,6 @@ export const handlers=[
         return HttpResponse.json(newReq, { status: 201 });
     }),
 
-    // 7. Зміна статусу заявки
     http.patch('/requests/:id/status', async ({ request, params }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         const body = (await request.json()) as { statusId: string; operatorName: string };
@@ -125,7 +119,6 @@ export const handlers=[
         return HttpResponse.json(requests[reqIndex]);
     }),
 
-    // 8. Додавання коментаря
     http.post('/requests/:id/comments', async ({ request, params }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         const body = (await request.json()) as { comment: string; authorName: string };
@@ -144,14 +137,24 @@ export const handlers=[
     }),
 
 
-    // 9. Отримання історії зміни статусів
     http.get('/requests/:id/history', ({ request, params }) => {
         if (!checkAuth(request)) return new HttpResponse(null, { status: 401 });
         return HttpResponse.json(history.filter((h) => h.requestId === params.id));
     }),
 
-    // 10. Довідники (категорії, пріоритети, статуси)
     http.get('/categories', () => HttpResponse.json(categories)),
     http.get('/priorities', () => HttpResponse.json(priorities)),
     http.get('/request-statuses', () => HttpResponse.json(statuses)),
+
+
+    http.get('/error-500', () => {
+        return new HttpResponse(JSON.stringify({ message: 'Сервер охопило полум’я (Помилка 500)' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }),
+
+    http.get('/network-error', () => {
+        return HttpResponse.error();
+    }),
 ];

@@ -9,10 +9,8 @@ export function RequestsPage() {
     const userRole = localStorage.getItem('userRole');
     const isOperator = userRole === 'operator';
 
-    // Вибираємо ендпоінт відповідно до ролі за ТЗ
     const endpoint = isOperator ? '/requests' : '/requests/my';
 
-    // Запит за допомогою TanStack Query
     const { data: requests = [], isLoading, error } = useQuery({
         queryKey: ['requests', isOperator, statusIdFilter],
         queryFn: async () => {
@@ -23,7 +21,6 @@ export function RequestsPage() {
         },
     });
 
-    // Отримуємо список статусів для випадаючого списку фільтрації
     const { data: statuses = [] } = useQuery({
         queryKey: ['statuses'],
         queryFn: async () => {
@@ -44,7 +41,7 @@ export function RequestsPage() {
     if (isLoading) {
         return (
             <div className="text-center py-16 text-cyan-400 font-mono text-lg animate-pulse">
-                👻 Привиди збирають гримуар заявок...
+                Завантаження списку заявок...
             </div>
         );
     }
@@ -52,23 +49,21 @@ export function RequestsPage() {
     if (error) {
         return (
             <div className="text-center py-12 text-red-400 font-mono text-lg bg-zinc-950 border border-red-500/30 rounded-xl max-w-lg mx-auto p-6">
-                ⚡ Темне прокляття завадило завантажити список заявок.
+                Не вдалося завантажити список заявок.
             </div>
         );
     }
 
     return (
         <div className="relative max-w-7xl mx-auto space-y-6">
-            {/* Блакитне примарне сяйво на фоні */}
             <div className="absolute -top-12 -left-12 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute top-1/2 -right-12 w-96 h-96 bg-blue-900/20 rounded-full blur-3xl pointer-events-none"></div>
 
-            {/* Шапка сторінки */}
             <div className="relative z-10 flex justify-between items-center flex-wrap gap-4">
                 <div className="flex items-center space-x-3">
                     <span className="text-3xl">👻</span>
                     <h2 className="text-2xl font-bold tracking-wide text-cyan-400 font-mono uppercase">
-                        {isOperator ? 'Загальний гримуар заявок (Оператор)' : 'Мої потойбічні заявки (Користувач)'}
+                        {isOperator ? 'Усі заявки ' : 'Мої заявки '}
                     </h2>
                 </div>
                 
@@ -77,15 +72,14 @@ export function RequestsPage() {
                         to="/requests/new"
                         className="px-5 py-2.5 border border-cyan-500/50 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] text-xs font-bold text-zinc-950 bg-cyan-400 hover:bg-cyan-300 focus:outline-none transition uppercase tracking-wider cursor-pointer"
                     >
-                        Створити закляття 🦇
+                       ➕
                     </Link>
                 )}
             </div>
 
-            {/* Фільтрація за допомогою Search Params */}
             <div className="relative z-10 bg-zinc-950 border border-cyan-500/30 p-4 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.1)] flex items-center space-x-4">
                 <label className="text-xs font-mono font-semibold uppercase tracking-wider text-cyan-300">
-                    Фільтр за станом привидів:
+                    Фільтр за статусом:
                 </label>
                 <select
                     value={statusIdFilter}
@@ -101,11 +95,10 @@ export function RequestsPage() {
                 </select>
             </div>
 
-            {/* Таблиця заяв */}
             <div className="relative z-10 bg-zinc-950 border border-cyan-500/30 rounded-xl shadow-[0_0_25px_rgba(6,182,212,0.12)] overflow-hidden">
                 {requests.length === 0 ? (
                     <p className="p-8 text-center text-zinc-500 font-mono text-sm">
-                        🕸️ Заявок за обраними темними критеріями не знайдено.
+                        🕸️ Нічого не знайдено за вашим запитом.
                     </p>
                 ) : (
                     <table className="min-w-full divide-y divide-cyan-950">
@@ -131,7 +124,7 @@ export function RequestsPage() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <Link to={`/requests/${req.id}`} className="text-cyan-400 hover:text-cyan-300 font-mono text-xs tracking-wider uppercase transition">
-                                            Оглянути 🔮 &rarr;
+                                            Оглянути ;
                                         </Link>
                                     </td>
                                 </tr>
